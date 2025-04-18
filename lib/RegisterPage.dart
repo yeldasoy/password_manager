@@ -78,7 +78,7 @@ class RegisterPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Zaten bir hesabın var mı?"),
+                      const Text("Zaten bir hesabın var mıaaa?"),
                       TextButton(
                         onPressed: () {
                           // Giriş sayfasına yönlendirme
