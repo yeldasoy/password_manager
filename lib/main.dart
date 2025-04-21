@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'register_page.dart'; // dosya adı küçük harfle, doğru import
+import 'screens/register_page.dart'; // dosya adı küçük harfle, doğru import
 
 void main() {
   runApp(const MyApp());
@@ -97,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Text(
                   'SOYCEL',
                   style: TextStyle(
-                    fontSize: 72,
+                    fontSize: 48,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 3,
@@ -118,7 +118,7 @@ class _SplashScreenState extends State<SplashScreen>
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 35,
+                    fontSize: 20,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
