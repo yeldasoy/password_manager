@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class RegisterPage extends StatefulWidget {
-  RegisterPage({super.key});
+class MailVerifyPage extends StatefulWidget {
+  MailVerifyPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<MailVerifyPage> createState() => _MailVerifyPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _MailVerifyPageState extends State<MailVerifyPage> {
   double _opacity = 1.0;
 
   @override
@@ -56,3 +56,5 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
+
+
