@@ -117,8 +117,8 @@ class _SplashScreenState extends State<SplashScreen>
                   'Ekrana dokunun',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
+                    color: Colors.black,
+                    fontSize: 30,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
