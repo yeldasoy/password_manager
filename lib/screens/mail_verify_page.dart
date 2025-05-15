@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 class MailVerifyPage extends StatefulWidget {
@@ -7,19 +8,87 @@ class MailVerifyPage extends StatefulWidget {
   State<MailVerifyPage> createState() => _MailVerifyPageState();
 }
 
-class _MailVerifyPageState extends State<MailVerifyPage> {
+class _MailVerifyPageState extends State<MailVerifyPage> with SingleTickerProviderStateMixin {
   double _opacity = 1.0;
+  int _remainingSeconds = 180;
+  late Timer _timer;
+  late AnimationController _controller;
+  List<TextEditingController> _codeControllers =
+  List.generate(6, (index) => TextEditingController());
+  List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
 
   @override
   void initState() {
     super.initState();
 
-    // Sayfa açıldığında opaklığı yavaşça azalt
     Future.delayed(const Duration(milliseconds: 200), () {
       setState(() {
         _opacity = 0.0;
       });
     });
+
+    _startTimer();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 180),
+    )..forward();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _controller.dispose();
+    for (final c in _codeControllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
+
+  Widget _buildCodeField(int index) {
+    return SizedBox(
+      width: 45,
+      child: TextField(
+        controller: _codeControllers[index],
+        focusNode: _focusNodes[index],
+        maxLength: 1,
+        keyboardType: TextInputType.number,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 22, color: Colors.white),
+        decoration: InputDecoration(
+          counterText: "",
+          filled: true,
+          fillColor: Colors.white24,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        onChanged: (value) {
+          if (value.isNotEmpty && index < 5) {
+            FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+          }
+          if (value.isEmpty && index > 0) {
+            FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
+          }
+        },
+      ),
+    );
   }
 
   @override
@@ -27,7 +96,7 @@ class _MailVerifyPageState extends State<MailVerifyPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Arkadaki mavi gradient arka plan
+          // Arka plan
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -51,10 +120,146 @@ class _MailVerifyPageState extends State<MailVerifyPage> {
               color: Colors.black.withOpacity(0.7),
             ),
           ),
+
+          // İçerik
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Büyük beyaz çember ve sayaç
+                SizedBox(
+                  width: 150, // 5 kat büyütülmüş
+                  height: 150,
+                  child: CustomPaint(
+                    painter: CircleCountdownPainter(
+                      progress: 1.0 - _controller.value,
+                      color: Colors.white,
+                      strokeWidth: 5,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$_remainingSeconds',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Kod kutuları
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(6, (index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: _buildCodeField(index),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 30),
+
+                // Tekrar Kod Gönder butonu
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _remainingSeconds = 180;
+                      _controller.reset();
+                      _controller.forward();
+                      _timer.cancel();
+                      _startTimer();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Tekrar Kod Gönder',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                )
+              ],
+            ),
+          ),
+
+          // Geri Dön Butonu
+          Positioned(
+            top: 40,
+            left: 16,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[900],
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Geri Dön',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
+class CircleCountdownPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
 
+  CircleCountdownPainter({
+    required this.progress,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint basePaint = Paint()
+      ..color = color.withOpacity(0.1)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final Paint progressPaint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final Offset center = Offset(size.width / 2, size.height / 2);
+    final double radius = (size.width - strokeWidth) / 2;
+
+    // Dış çember
+    canvas.drawCircle(center, radius, basePaint);
+
+    // Geriye kalan süre çemberi (ters yönde)
+    double sweepAngle = 2 * 3.1415926535897932 * progress;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -3.14159 / 2,
+      sweepAngle,
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CircleCountdownPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
