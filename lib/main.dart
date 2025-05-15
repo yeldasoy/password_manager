@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/register_page.dart'; // dosya adı küçük harfle, doğru import
+import 'screens/how_to_use_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen>
       // tamamen opak olunca sayfa geçişi
       Future.delayed(const Duration(seconds: 2), () {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => RegisterPage()),
+          MaterialPageRoute(builder: (context) => HowToUsePage()),
         );
       });
     });

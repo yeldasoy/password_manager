@@ -42,13 +42,35 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
 
-          // Gri opak katman
+          // Gri opak katman (animasyonlu)
           AnimatedOpacity(
             opacity: _opacity,
             duration: const Duration(seconds: 3),
             curve: Curves.easeOut,
             child: Container(
               color: Colors.black.withOpacity(0.7),
+            ),
+          ),
+
+          // Geri Dön Butonu
+          Positioned(
+            top: 40,
+            left: 16,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Önceki sayfaya döner
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[900],
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Geri Dön',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
         ],

@@ -62,7 +62,26 @@ class _RegisterPageState extends State<RegisterPage> {
               color: Colors.black.withOpacity(0.7),
             ),
           ),
-
+          Positioned(
+            top: 40,
+            left: 16,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Önceki sayfaya döner
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[900],
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Geri Dön',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
           // Form içeriği
           Center(
             child: SingleChildScrollView(
