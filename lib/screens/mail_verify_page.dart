@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'main_page.dart';
 
 class MailVerifyPage extends StatefulWidget {
   MailVerifyPage({super.key});
@@ -83,9 +84,27 @@ class _MailVerifyPageState extends State<MailVerifyPage> with SingleTickerProvid
           if (value.isNotEmpty && index < 5) {
             FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
           }
+
           if (value.isEmpty && index > 0) {
             FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
           }
+
+          // Tüm kutular dolduğunda kontrol et
+          Future.delayed(const Duration(milliseconds: 100), () {
+            String enteredCode = _codeControllers.map((c) => c.text).join();
+            if (enteredCode.length == 6) {
+              if (enteredCode == '000000') {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainPage()),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Kod yanlış!')),
+                );
+              }
+            }
+          });
         },
       ),
     );
@@ -162,6 +181,7 @@ class _MailVerifyPageState extends State<MailVerifyPage> with SingleTickerProvid
                 ),
                 const SizedBox(height: 30),
 
+
                 // Tekrar Kod Gönder butonu
                 ElevatedButton(
                   onPressed: () {
@@ -191,27 +211,7 @@ class _MailVerifyPageState extends State<MailVerifyPage> with SingleTickerProvid
             ),
           ),
 
-          // Geri Dön Butonu
-          Positioned(
-            top: 40,
-            left: 16,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[900],
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Geri Dön',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
+
         ],
       ),
     );
