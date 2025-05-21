@@ -8,7 +8,7 @@ include("C:/Users/yelda/AppData/Local/Android/Sdk/ndk/26.3.11579264/build/cmake/
 set(CMAKE_SYSTEM "Android-1")
 set(CMAKE_SYSTEM_NAME "Android")
 set(CMAKE_SYSTEM_VERSION "1")
-set(CMAKE_SYSTEM_PROCESSOR "aarch64")
+set(CMAKE_SYSTEM_PROCESSOR "i686")
 
 set(CMAKE_CROSSCOMPILING "TRUE")
 
