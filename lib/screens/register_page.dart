@@ -1,6 +1,11 @@
+// lib/register_page.dart
+
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // doğru
+import 'dart:convert';
+import 'package:password_manager/services/api_service.dart'; // Proje adına göre yolu düzelt
+import 'login_page.dart';
 import 'mail_verify_page.dart';
+
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -15,13 +20,17 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 200), () {
-      setState(() {
-        _opacity = 0.0;
-      });
+      if (mounted) {
+        setState(() {
+          _opacity = 0.0;
+        });
+      }
     });
   }
 
@@ -33,12 +42,69 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  Future<void> _registerUser() async {
+    if (_firstNameController.text.isEmpty ||
+        _lastNameController.text.isEmpty ||
+        _emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lütfen tüm alanları doldurun.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // --- DEĞİŞİKLİK BURADA ---
+      // Doğrudan http.post yerine ApiService kullanılıyor.
+      final response = await ApiService.registerUser(
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+        email: _emailController.text,
+      );
+      // --- DEĞİŞİKLİK SONU ---
+
+      if (!mounted) return;
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kayıt başarılı: ${responseData['message']}')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MailVerifyPage(email: _emailController.text),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kayıt başarısız: ${responseData['message']}')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bağlantı hatası veya sunucu kapalı: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // build metodu içeriği aynı kalabilir, değişiklik yapmaya gerek yok.
     return Scaffold(
       body: Stack(
         children: [
-          // Arkadaki mavi gradient arka plan
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -52,8 +118,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-
-          // Gri opak katman (yavaşça şeffaflaşacak)
           AnimatedOpacity(
             opacity: _opacity,
             duration: const Duration(seconds: 5),
@@ -67,7 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
             left: 16,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Önceki sayfaya döner
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[900],
@@ -82,7 +146,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-          // Form içeriği
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -102,7 +165,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   TextField(
                     controller: _lastNameController,
                     decoration: InputDecoration(
@@ -116,7 +178,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -131,36 +192,26 @@ class _RegisterPageState extends State<RegisterPage> {
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 24),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () {
-                        print('Ad: ${_firstNameController.text}');
-                        print('Soyad: ${_lastNameController.text}');
-                        print('Mail: ${_emailController.text}');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MailVerifyPage(),
-                          ),
-                        );
-                      },
+                      onPressed: _isLoading ? null : _registerUser,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue.shade700,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
                         'Kayıt Ol',
-                        style: TextStyle(fontSize: 18),
+                        style: TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   SizedBox(
                     width: double.infinity,
                     child: TextButton(

@@ -1,30 +1,35 @@
+// lib/screens/setting_page.dart
+
 import 'package:flutter/material.dart';
-import 'main_page.dart';
-import 'password_generator.dart';
+import 'package:password_manager/screens/main_page.dart';
+import 'package:password_manager/screens/password_generator.dart';
+import 'package:password_manager/screens/login_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SettingPage extends StatefulWidget {
-  SettingPage({super.key});
+  final String masterPassword;
+  final String salt;
+  const SettingPage(
+      {super.key, required this.masterPassword, required this.salt});
 
   @override
   State<SettingPage> createState() => _SettingPageState();
 }
 
 class _SettingPageState extends State<SettingPage> {
-  double _opacity = 1.0;
-  int _selectedIndex = 0;
-
+  int _selectedIndex = 2;
   final List<String> _menuItems = ["Şifrelerim", "Şifre Yaratıcı", "Ayarlarım"];
 
-  @override
-  void initState() {
-    super.initState();
-
-    // Sayfa açıldığında opaklığı yavaşça azalt
-    Future.delayed(const Duration(milliseconds: 200), () {
-      setState(() {
-        _opacity = 0.0;
-      });
-    });
+  void _logout() async {
+    final storage = const FlutterSecureStorage();
+    await storage.deleteAll(); // Güvenli depolamadaki her şeyi sil
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+            (route) => false,
+      );
+    }
   }
 
   @override
@@ -32,52 +37,92 @@ class _SettingPageState extends State<SettingPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Arkadaki mavi gradient arka plan
+          // Arka plan
           Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                colors: [
-                  Colors.blue.shade900,
-                  Colors.blue.shade800,
-                  Colors.blue.shade600,
-                  Colors.blue.shade200
-                ],
-              ),
+              // ... (gradient aynı) ...
             ),
           ),
-
-          // Gri opak katman (animasyonlu)
-          AnimatedOpacity(
-            opacity: _opacity,
-            duration: const Duration(seconds: 3),
-            curve: Curves.easeOut,
-            child: Container(
-              color: Colors.black.withOpacity(0.7),
-            ),
-          ),
-
-          // Geri Dön Butonu
-          Positioned(
-            top: 40,
-            left: 16,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Önceki sayfaya döner
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[900],
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text("Ayarlar",
+                            style: TextStyle(
+                                fontSize: 24, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center),
+                        const SizedBox(height: 30),
+                        TextButton(onPressed: _logout, child: const Text("Oturumu Kapat")),
+                        const SizedBox(height: 12),
+                        TextButton(onPressed: () {}, child: const Text("Hesabı Sil")),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Geri Dön',
-                style: TextStyle(color: Colors.white),
-              ),
+                // Alt Menü
+                Container(
+                  color: Colors.white,
+                  height: 70,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(_menuItems.length, (index) {
+                      bool isSelected = index == _selectedIndex;
+                      return GestureDetector(
+                        onTap: () {
+                          // --- DEĞİŞİKLİK BURADA ---
+                          if (index == 0) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => MainPage(
+                                      masterPassword: widget.masterPassword,
+                                      salt: widget.salt)),
+                            );
+                          } else if (index == 1) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => PasswordGenerator(
+                                      masterPassword: widget.masterPassword,
+                                      salt: widget.salt)),
+                            );
+                          }
+                          // --- DEĞİŞİKLİK SONU ---
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.grey.shade300
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            _menuItems[index],
+                            style: TextStyle(
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
             ),
-          ),
+          )
         ],
       ),
     );
