@@ -17,7 +17,7 @@ Uint8List _deriveKey(Map<String, String> params) {
 
   // --- DEĞİŞİKLİK BURADA ---
   // Tekrar sayısını 480,000'den daha makul bir seviyeye düşürdük.
-  final pbkdf2Params = pointy.Pbkdf2Parameters(saltBytes, 300, 32);
+  final pbkdf2Params = pointy.Pbkdf2Parameters(saltBytes, 30000, 32);
   // --- DEĞİŞİKLİK SONU ---
 
   derivator.init(pbkdf2Params);

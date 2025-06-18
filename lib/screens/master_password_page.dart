@@ -121,10 +121,7 @@ class _MasterPasswordPageState extends State<MasterPasswordPage> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (context) => MainPage(
-                masterPassword: masterPassword,
-                salt: salt,
-              ),
+              builder: (context) => LoginPage()
             ),
                 (route) => false,
           );
