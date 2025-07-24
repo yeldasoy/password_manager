@@ -28,6 +28,40 @@ class ApiService {
     required String lastName,
     required String email,
   }) async {
+    try { // Hata yakalama bloğunu burada başlat
+      final url = Uri.parse('$_baseUrl/register');
+      final headers = {'Content-Type': 'application/json; charset=UTF-8'};
+      final body = jsonEncode({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+      });
+
+      print('İSTEK GÖNDERİLİYOR: $url'); // Hata ayıklama için isteğin nereye gittiğini gör
+      print('İSTEK BODY: $body');
+
+      // Ağ isteğini try bloğu içine al
+      final response = await http.post(url, headers: headers, body: body);
+
+      print('RESPONSE GELDİ: ${response.statusCode}'); // Gelen cevabı da yazdır
+
+      return response;
+
+    } catch (e, s) {
+      // Herhangi bir hata olursa (ağ hatası, format hatası vs.) burada yakala
+      print('API SERVİSİNDE HATA (registerUser): $e');
+      print('STACK TRACE: $s');
+
+      // Hatayı yakaladıktan sonra tekrar fırlat.
+      // Bu, metodu çağıran UI katmanının da hatadan haberdar olmasını sağlar.
+      rethrow;
+    }
+  }
+  /*static Future<http.Response> registerUser({
+    required String firstName,
+    required String lastName,
+    required String email,
+  }) async {
     final url = Uri.parse('$_baseUrl/register');
     final headers = {'Content-Type': 'application/json; charset=UTF-8'};
     final body = jsonEncode({
@@ -36,6 +70,12 @@ class ApiService {
       'email': email,
     });
     return http.post(url, headers: headers, body: body);
+  }*/
+
+  static Future<http.Response> deleteAccount() async {
+    final url = Uri.parse('$_baseUrl/user/me');
+    final authHeaders = await _getAuthHeaders(); // Token'lı başlıkları al
+    return http.delete(url, headers: authHeaders);
   }
 
   static Future<http.Response> verifyEmail({

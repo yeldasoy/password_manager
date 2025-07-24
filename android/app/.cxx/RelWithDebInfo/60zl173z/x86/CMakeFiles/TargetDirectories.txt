@@ -1,0 +1,2 @@
+C:/Users/yelda/Desktop/password_app/password_manager/android/app/.cxx/RelWithDebInfo/60zl173z/x86/CMakeFiles/edit_cache.dir
+C:/Users/yelda/Desktop/password_app/password_manager/android/app/.cxx/RelWithDebInfo/60zl173z/x86/CMakeFiles/rebuild_cache.dir

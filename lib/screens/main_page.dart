@@ -1,14 +1,13 @@
 // lib/screens/main_page.dart
 
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:password_manager/services/api_service.dart';
 import 'package:password_manager/services/encryption_service.dart';
 import 'package:password_manager/screens/password_generator.dart';
 import 'package:password_manager/screens/setting_page.dart';
 import 'package:password_manager/screens/login_page.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class MainPage extends StatefulWidget {
   final String masterPassword;
@@ -23,58 +22,41 @@ class _MainPageState extends State<MainPage> {
   late EncryptionService _encryptionService;
   List<Map<String, dynamic>> _passwordList = [];
   bool _isLoading = true;
-  double _opacity = 1.0;
   int _selectedIndex = 0;
   final List<String> _menuItems = ["Şifrelerim", "Şifre Yaratıcı", "Ayarlarım"];
 
   @override
   void initState() {
     super.initState();
-    print("--- ADIM 1: MainPage initState başladı. ---");
     _initializeAndFetchData();
   }
 
   Future<void> _initializeAndFetchData() async {
-    print("--- ADIM 2: Servis başlatılıyor ve veriler çekiliyor... ---");
     if (!mounted) return;
-    setState(() { _isLoading = true; });
-
+    setState(() => _isLoading = true);
     try {
       _encryptionService = EncryptionService();
       await _encryptionService.initialize(
           masterPassword: widget.masterPassword, salt: widget.salt);
-      print("--- ADIM 3: EncryptionService başarıyla oluşturuldu. ---");
-
       await _fetchPasswords();
-
-    } catch (e, s) {
-      print("!!!! HATA: _initializeAndFetchData içinde genel bir hata oluştu! !!!!");
-      print(e);
-      print(s);
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Uygulama başlatılırken bir hata oluştu: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Uygulama başlatılırken bir hata oluştu: $e')));
       }
     } finally {
-      if (mounted) {
-        setState(() { _isLoading = false; });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _fetchPasswords() async {
-    print("--- ADIM 4: _fetchPasswords fonksiyonu çalışıyor. ---");
     try {
       final response = await ApiService.getPasswords();
-      print("--- ADIM 5: API'den yanıt alındı. Status Code: ${response.statusCode} ---");
       if (response.statusCode == 200 && mounted) {
         final data = jsonDecode(response.body);
-        print("--- ADIM 6: JSON verisi başarıyla çözüldü. ---");
         List<dynamic> records = data['passwords'];
 
         List<Map<String, dynamic>> decryptedList = [];
-        print("--- ADIM 7: Şifreleri çözme döngüsü başlıyor. Kayıt sayısı: ${records.length} ---");
-
         for (var record in records) {
           final String? encryptedUsername = record['kullanici_adi'];
           final String? encryptedPassword = record['sifre'];
@@ -86,28 +68,22 @@ class _MainPageState extends State<MainPage> {
             decryptedList.add({
               'id': record['id'],
               'platform': record['site_adi'],
-              'username': _encryptionService.decryptData(
+              'username': _encryptionService.decryptField(
                   encryptedBase64: encryptedUsername, ivBase64: iv),
-              'password': _encryptionService.decryptData(
+              'password': _encryptionService.decryptField(
                   encryptedBase64: encryptedPassword, ivBase64: iv),
             });
           }
         }
-        print("--- ADIM 8: Şifreleri çözme döngüsü bitti. ---");
         setState(() => _passwordList = decryptedList);
       } else {
-        print("!!!! HATA: API yanıtı başarılı değil! Status: ${response.statusCode}, Body: ${response.body} !!!!");
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Şifreler getirilemedi.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Şifreler getirilemedi.')));
       }
-    } catch (e, s) {
-      print('!!!! HATA: _fetchPasswords CATCH bloğuna düştü !!!!');
-      print('HATA MESAJI: $e');
-      print('STACKTRACE: $s');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Hata: $e')));
-      }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Hata: $e')));
     }
-    print("--- ADIM 9: _fetchPasswords fonksiyonu bitti. ---");
   }
 
   void _showAddPasswordDialog() {
@@ -123,7 +99,7 @@ class _MainPageState extends State<MainPage> {
           return AlertDialog(
             shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text("Yeni Şifre Ekle"),
+            title: const Text("Yeni Şifre Ekle"),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -131,16 +107,16 @@ class _MainPageState extends State<MainPage> {
                 children: [
                   TextField(
                       controller: platformController,
-                      decoration: InputDecoration(labelText: "Platform Adı")),
+                      decoration: const InputDecoration(labelText: "Platform Adı")),
                   const SizedBox(height: 16),
                   TextField(
                       controller: usernameController,
                       decoration:
-                      InputDecoration(labelText: "Mail / Kullanıcı Adı")),
+                      const InputDecoration(labelText: "Mail / Kullanıcı Adı")),
                   const SizedBox(height: 16),
                   TextField(
                       controller: passwordController,
-                      decoration: InputDecoration(labelText: "Şifre")),
+                      decoration: const InputDecoration(labelText: "Şifre")),
                 ],
               ),
             ),
@@ -160,15 +136,19 @@ class _MainPageState extends State<MainPage> {
                     final plainUsername = usernameController.text;
                     final plainPassword = passwordController.text;
 
-                    final encryptedPasswordMap =
-                    _encryptionService.encryptData(plainPassword);
+                    // 1. Tek bir IV oluştur.
+                    final commonIv = _encryptionService.generateIV();
 
+                    // 2. Kullanıcı adını ve parolayı aynı IV ile şifrele.
+                    final encryptedUsername = _encryptionService.encryptField(plainUsername, commonIv);
+                    final encryptedPassword = _encryptionService.encryptField(plainPassword, commonIv);
+
+                    // 3. API'ye şifreli verileri ve tek, ortak IV'yi gönder.
                     final response = await ApiService.addNewPassword(
                       siteAdi: platformController.text,
-                      kullaniciAdiEncrypted:
-                      _encryptionService.encryptData(plainUsername)['data']!,
-                      sifreEncrypted: encryptedPasswordMap['data']!,
-                      iv: encryptedPasswordMap['iv']!,
+                      kullaniciAdiEncrypted: encryptedUsername,
+                      sifreEncrypted: encryptedPassword,
+                      iv: commonIv.base64,
                     );
 
                     if (!mounted) return;
@@ -177,7 +157,7 @@ class _MainPageState extends State<MainPage> {
                       _fetchPasswords();
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Şifre kaydedilemedi.')));
+                          const SnackBar(content: Text('Şifre kaydedilemedi.')));
                     }
                   }
                 },
@@ -195,15 +175,10 @@ class _MainPageState extends State<MainPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Silmeyi Onayla'),
-        content: const Text(
-            'Bu kaydı kalıcı olarak silmek istediğinizden emin misiniz?'),
+        content: const Text('Bu kaydı kalıcı olarak silmek istediğinizden emin misiniz?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('İptal')),
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Sil', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('İptal')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Sil', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
@@ -213,8 +188,7 @@ class _MainPageState extends State<MainPage> {
       if (response.statusCode == 200 && mounted) {
         _fetchPasswords();
       } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Silme işlemi başarısız.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silme işlemi başarısız.')));
       }
     }
   }
@@ -238,9 +212,7 @@ class _MainPageState extends State<MainPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(item['platform'] ?? "",
-                      style:
-                      const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(item['platform'] ?? "", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   IconButton(
                     icon: Icon(Icons.delete_outline, color: Colors.red.shade400),
                     onPressed: () => _deletePassword(item['id']),
@@ -252,12 +224,9 @@ class _MainPageState extends State<MainPage> {
               Text("Kullanıcı Adı:", style: TextStyle(color: Colors.grey.shade600)),
               Row(
                 children: [
-                  Expanded(
-                      child: Text(item['username'] ?? "",
-                          overflow: TextOverflow.ellipsis)),
+                  Expanded(child: Text(item['username'] ?? "", overflow: TextOverflow.ellipsis)),
                   TextButton(
-                    onPressed: () => Clipboard.setData(
-                        ClipboardData(text: item['username'] ?? "")),
+                    onPressed: () => Clipboard.setData(ClipboardData(text: item['username'] ?? "")),
                     child: const Text("Kopyala"),
                   )
                 ],
@@ -266,11 +235,9 @@ class _MainPageState extends State<MainPage> {
               Text("Şifre:", style: TextStyle(color: Colors.grey.shade600)),
               Row(
                 children: [
-                  Expanded(
-                      child: Text('••••••••••', style: TextStyle(fontSize: 16))),
+                  Expanded(child: Text('••••••••••', style: TextStyle(fontSize: 16))),
                   TextButton(
-                    onPressed: () => Clipboard.setData(
-                        ClipboardData(text: item['password'] ?? "")),
+                    onPressed: () => Clipboard.setData(ClipboardData(text: item['password'] ?? "")),
                     child: const Text("Kopyala"),
                   )
                 ],
@@ -305,11 +272,7 @@ class _MainPageState extends State<MainPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Text("Şifrelerim",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold)),
+                  child: Text("Şifrelerim", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                 ),
                 Expanded(
                   child: _isLoading
@@ -317,13 +280,11 @@ class _MainPageState extends State<MainPage> {
                       : _passwordList.isEmpty
                       ? Center(
                     child: Padding(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 30),
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
                       child: Text(
                         "Henüz kayıtlı şifreniz bulunmuyor.\nAşağıdaki butona basarak yeni bir şifre ekleyebilirsiniz.",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Colors.white, fontSize: 18),
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                     ),
                   )
@@ -372,20 +333,16 @@ class _MainPageState extends State<MainPage> {
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
-                            color:
-                            isSelected ? Colors.grey.shade300 : Colors.white,
+                            color: isSelected ? Colors.grey.shade300 : Colors.white,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             _menuItems[index],
                             style: TextStyle(
                               color: Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                         ),
